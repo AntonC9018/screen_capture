@@ -31,11 +31,16 @@ void main()
     {
         static struct LocalStuff
         {
-            wstring[] names;
+            HWND[] goodWindows;
         }
         LocalStuff locals;
 
-        static bool func(HWND handle, LocalStuff* locals) 
+        // BOOL EnumWindows(
+        //     [in] WNDENUMPROC lpEnumFunc,
+        //     [in] LPARAM      lParam
+        // );
+
+        locals.foreachWindow!((handle, locals) 
         {
             if (!IsWindowVisible(handle))
                 return true;
@@ -46,75 +51,44 @@ void main()
             if (GetWindowInfo(handle, &windowInfo) == 0)
                 return true;
             if (windowInfo.dwStyle & WS_POPUP)
-                return 1;
+                return true;
             if (!(windowInfo.dwExStyle & WS_EX_OVERLAPPEDWINDOW))
-                return 1;
+                return true;
 
-            enum int maxBufferLength = 512;
-            wchar[maxBufferLength] textBuffer;
-            GetWindowText(handle, textBuffer.ptr, maxBufferLength); 
-
-            import std.string : fromStringz;
-            writeln("Inspecting window: ", fromStringz(textBuffer.ptr));
-
-            if (windowInfo.dwExStyle & WS_EX_APPWINDOW)
-                writeln(":: Forces Taskbar");
-
+            locals.goodWindows ~= handle;
             return true;
-        }
+        });
+        // EnumWindows(&windowsAdapter!(, WNDENUMPROC), cast(LPARAM) &locals);
 
-        // BOOL EnumWindows(
-        //     [in] WNDENUMPROC lpEnumFunc,
-        //     [in] LPARAM      lParam
-        // );
-        EnumWindows(&windowsAdapter!(func, WNDENUMPROC), cast(LPARAM) &locals);
 
-        foreach (wstring str; locals.names)
         {
-            writeln(str);
+            foreach (handle; locals.goodWindows)
+            {   
+                enum int maxBufferLength = 512;
+                wchar[maxBufferLength] textBuffer;
+                GetWindowText(handle, textBuffer.ptr, maxBufferLength); 
+
+                import std.string : fromStringz;
+                writeln("Inspecting window: ", fromStringz(textBuffer.ptr));
+            }
         }
     }
 }
 
-/// Does a function that wraps the given function, forwarding all parameters,
-/// but mapping them with a cast to the type that the given function expects.
-/// In the end you get an adapter function that has the signature of `TTargetType`
-/// that forwards to `func`.
-template windowsAdapter(alias func, TTargetType)
+
+BOOL foreachWindow(alias func, T)(ref T context)
 {
     import std.traits : Parameters, ReturnType;
-    alias windowsAdapter = windowsParamsAdapter!(func, ReturnType!TTargetType, Parameters!TTargetType);
-}
 
-template windowsParamsAdapter(alias func, TReturnType, TArgumentTypes...)
-{
-    extern(Windows) TReturnType windowsParamsAdapter(TArgumentTypes args) nothrow
+    extern(Windows) static BOOL wrapper(HWND handle, LPARAM param) nothrow
     {
-        import std.traits : Parameters;
-        import std.array : join;
-        import std.conv : text, to;
-
-        alias Params = Parameters!func;
-        static assert(Params.length == TArgumentTypes.length);
-        
-        enum argsString = 
-        (){
-            string[] result;
-            static foreach (index; 0 .. Params.length)
-                result ~= text(`cast(Params[`, index, `]) args[`, index, `]`);
-            
-            return result.join(",");
-        }();
-
-        try
+        try return func(handle, cast(T*) param);
+        catch(Exception e) 
         {
-            mixin(`return cast(TReturnType) func(`, argsString, `);`);
+            try writeln(e);
+            catch (Exception e2){}
+            return 0;
         }
-        catch (Exception exception)
-        {
-            try writeln(exception);
-            catch(Exception exception) {}
-        }
-        return TReturnType.init;
     }
+    return EnumWindows(&wrapper, cast(LPARAM) &context);
 }
