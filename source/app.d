@@ -40,12 +40,26 @@ void main()
             if (!IsWindowVisible(handle))
                 return true;
 
+            WINDOWINFO windowInfo;
+            windowInfo.cbSize = WINDOWINFO.sizeof;
+
+            if (GetWindowInfo(handle, &windowInfo) == 0)
+                return true;
+            if (windowInfo.dwStyle & WS_POPUP)
+                return 1;
+            if (!(windowInfo.dwExStyle & WS_EX_OVERLAPPEDWINDOW))
+                return 1;
+
             enum int maxBufferLength = 512;
             wchar[maxBufferLength] textBuffer;
             GetWindowText(handle, textBuffer.ptr, maxBufferLength); 
 
             import std.string : fromStringz;
-            locals.names ~= fromStringz(textBuffer.ptr).idup;
+            writeln("Inspecting window: ", fromStringz(textBuffer.ptr));
+
+            if (windowInfo.dwExStyle & WS_EX_APPWINDOW)
+                writeln(":: Forces Taskbar");
+
             return true;
         }
 
@@ -92,6 +106,15 @@ template windowsParamsAdapter(alias func, TReturnType, TArgumentTypes...)
             return result.join(",");
         }();
 
-        mixin(`return cast(TReturnType) func(`, argsString, `);`);
+        try
+        {
+            mixin(`return cast(TReturnType) func(`, argsString, `);`);
+        }
+        catch (Exception exception)
+        {
+            try writeln(exception);
+            catch(Exception exception) {}
+        }
+        return TReturnType.init;
     }
 }
