@@ -29,40 +29,32 @@ void main()
 
 
     {
-        static struct LocalStuff
-        {
-            HWND[] goodWindows;
-        }
-        LocalStuff locals;
+        HWND[] goodWindows;
 
-        // BOOL EnumWindows(
-        //     [in] WNDENUMPROC lpEnumFunc,
-        //     [in] LPARAM      lParam
-        // );
-
-        locals.foreachWindow!((handle, locals) 
+        BOOL foreachFunc(HWND handle)
         {
             if (!IsWindowVisible(handle))
-                return true;
+                return 1;
 
             WINDOWINFO windowInfo;
             windowInfo.cbSize = WINDOWINFO.sizeof;
 
             if (GetWindowInfo(handle, &windowInfo) == 0)
-                return true;
+                return 1;
             if (windowInfo.dwStyle & WS_POPUP)
-                return true;
+                return 1;
             if (!(windowInfo.dwExStyle & WS_EX_OVERLAPPEDWINDOW))
-                return true;
+                return 1;
 
-            locals.goodWindows ~= handle;
-            return true;
-        });
-        // EnumWindows(&windowsAdapter!(, WNDENUMPROC), cast(LPARAM) &locals);
+            goodWindows ~= handle;
+            return 1;
+        }
+
+        foreachWindow(&CrashOnThrow!foreachFunc);
 
 
         {
-            foreach (handle; locals.goodWindows)
+            foreach (handle; goodWindows)
             {   
                 enum int maxBufferLength = 512;
                 wchar[maxBufferLength] textBuffer;
@@ -76,19 +68,41 @@ void main()
 }
 
 
-BOOL foreachWindow(alias func, T)(ref T context)
+template CrashOnThrow(alias func)
 {
-    import std.traits : Parameters, ReturnType;
+    import std.traits : Parameters;
 
-    extern(Windows) static BOOL wrapper(HWND handle, LPARAM param) nothrow
+    auto CrashOnThrow(Parameters!func things) nothrow
     {
-        try return func(handle, cast(T*) param);
-        catch(Exception e) 
+        try return func(things);
+        catch (Exception e)
         {
             try writeln(e);
-            catch (Exception e2){}
-            return 0;
+            catch (Exception e1)
+            {
+                import core.stdc.stdlib;
+                exit(-1);
+            }
+            return typeof(func(things)).init;
         }
     }
+}
+
+BOOL foreachWindow(scope BOOL delegate(HWND) nothrow func)
+{
+    static struct CallbackContext
+    {
+        BOOL delegate(HWND) nothrow callback;
+    }
+    extern(Windows) static BOOL wrapper(HWND handle, LPARAM param) nothrow
+    {
+        return (cast(CallbackContext*) param).callback(handle);
+    }
+
+    auto context = CallbackContext(func);
+    // BOOL EnumWindows(
+    //     [in] WNDENUMPROC lpEnumFunc,
+    //     [in] LPARAM      lParam
+    // );
     return EnumWindows(&wrapper, cast(LPARAM) &context);
 }
