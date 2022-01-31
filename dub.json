@@ -5,7 +5,7 @@
 	"targetPath": "bin",
 	"targetType": "executable",
 	"workingDirectory": "bin",
-	"libs": ["kernel32", "user32"],
+	"libs": ["kernel32", "user32", "vfw32"],
 	"dependencies": {
 		"win32": "~>2.98.1"
 	}

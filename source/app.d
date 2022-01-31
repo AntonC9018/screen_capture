@@ -6,27 +6,6 @@ import win32.windows;
 
 void main()
 {
-    // HWND VFWAPI capCreateCaptureWindowA(
-    //     LPCSTR lpszWindowName,
-    //     DWORD  dwStyle,
-    //     int    x,
-    //     int    y,
-    //     int    nWidth,
-    //     int    nHeight,
-    //     HWND   hwndParent,
-    //     int    nID
-    // );
-
-    // auto handle = {
-    //     const windowName = "Test";
-    //     const style = 
-    //     const desktopWindow = GetDesktopWindow();
-    //     const 
-    //     return capCreateCaptureWindowA(
-    //         windowName,
-    //         style);
-    // }();
-
     // Ideally this should buffer, but I don't write much UTF-16, so at this point I don't care.
     static HANDLE hConsole;
     static void writew(const(wchar)[] buffer)
@@ -91,13 +70,13 @@ void main()
 
             alias promptIntInRange = Prompt!(128).intInRange!(ShortCircuitInputs);
             
-            const result = promptIntInRange(0, cast(int) goodWindows.length - 1);
+            const indexInputResult = promptIntInRange(0, cast(int) goodWindows.length - 1);
 
-            final switch (result.type)
+            final switch (indexInputResult.type)
             {
                 case ShortCircuitInputs.success:
                 {
-                    writeln("Selected window: ", result.value);
+                    // writeln("Selected window: ", indexInputResult.value);
                     break;
                 }
                 case ShortCircuitInputs.close:
@@ -108,6 +87,53 @@ void main()
                 {
                     continue;
                 }
+            }
+            {
+                
+                void writeLastError()
+                {
+                    const errorCode = GetLastError();
+                    writeln("Error code: ", errorCode);
+                }
+
+                writeLastError();
+
+                // Yeah, this is something totally different.
+                auto handle = 
+                (){
+                    // HWND VFWAPI capCreateCaptureWindowA(
+                    //     LPCSTR lpszWindowName,
+                    //     DWORD  dwStyle,
+                    //     int    x,
+                    //     int    y,
+                    //     int    nWidth,
+                    //     int    nHeight,
+                    //     HWND   hwndParent,
+                    //     int    nID
+                    // );
+
+                    LPCWSTR windowName = "Test";
+                    auto style = WS_OVERLAPPEDWINDOW;
+                    int x = 100;
+                    int y = 100;
+                    int width = 200;
+                    int height = 200;
+                    auto parentHandle = goodWindows[indexInputResult.value];
+                    int id = 0;
+
+                    return capCreateCaptureWindow(
+                        windowName,
+                        style,
+                        x,
+                        y,
+                        width,
+                        height,
+                        parentHandle,
+                        id);
+                }();
+
+                writeln("Handle: ", handle);
+                writeLastError();
             }
         }
     }
