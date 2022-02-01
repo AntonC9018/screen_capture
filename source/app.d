@@ -1,7 +1,7 @@
 import std.stdio;
-import win32.vfw;
-import win32.winuser;
-import win32.windows;
+import core.sys.windows.vfw;
+import core.sys.windows.winuser;
+import core.sys.windows.windows;
 
 
 void main()
