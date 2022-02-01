@@ -166,7 +166,7 @@ template CrashOnThrow(alias func)
 
 BOOL foreachWindow(scope BOOL delegate(HWND) nothrow func)
 {
-    static struct CallbackContext
+    scope static struct CallbackContext
     {
         BOOL delegate(HWND) nothrow callback;
     }
