@@ -3,6 +3,9 @@ import core.sys.windows.vfw;
 import core.sys.windows.winuser;
 import core.sys.windows.windows;
 
+import acd.versions : Versions;
+mixin Versions;
+
 // extern (Windows) int WinMain(
 //     HINSTANCE hInstance,
 //     HINSTANCE hPrevInstance,
@@ -25,20 +28,29 @@ extern(Windows) int WinMain(
     {
         WNDCLASSEX wc;
         {
-            import menu;
-
             wc.cbSize = WNDCLASSEX.sizeof;
             wc.style = 0;
             wc.lpfnWndProc = &WndProc;
             wc.cbClsExtra = 0;
             wc.cbWndExtra = 0;
             wc.hInstance = hInstance;
-            wc.hIcon = LoadIcon(hInstance, cast(wchar*) IDI_MYICON);
-            wc.hCursor = LoadCursor(NULL, IDC_ARROW);
             wc.hbrBackground = cast(HBRUSH) (COLOR_WINDOW + 1);
-            wc.lpszMenuName = cast(wchar*) IDR_MYMENU;
             wc.lpszClassName = g_szClassName;
-            wc.hIconSm = LoadImage(hInstance, cast(wchar*) IDI_MYICON, IMAGE_ICON, 16, 16, 0);
+            wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+
+            static if (Version.UseMenuResource)
+            {
+                import resources.menu;
+                wc.lpszMenuName = cast(wchar*) IDR_MYMENU;
+                wc.hIcon = LoadIcon(hInstance, cast(wchar*) IDI_MYICON);
+                wc.hIconSm = LoadImage(hInstance, cast(wchar*) IDI_MYICON, IMAGE_ICON, 16, 16, 0);
+            }
+            else
+            {
+                wc.lpszMenuName = NULL;
+                wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+                wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+            }
         }
 
         if (!RegisterClassEx(&wc))
@@ -130,6 +142,45 @@ extern(Windows) LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 {
     switch (msg)
     {
+        static if (Version.DoMenuInCode)
+        {
+            case WM_CREATE:
+            {
+                import resources.menu;
+                {
+                    HMENU hMenu = CreateMenu();
+                    {
+                        HMENU hSubMenu = CreatePopupMenu();
+                        AppendMenu(hSubMenu, MF_STRING, ID_FILE_EXIT, "E&xit");
+                        AppendMenu(hMenu, MF_STRING | MF_POPUP, cast(UINT) hSubMenu, "&File");
+                    }
+                    {
+                        HMENU hSubMenu = CreatePopupMenu();
+                        AppendMenu(hSubMenu, MF_STRING, ID_STUFF_GO, "&Go");
+                        AppendMenu(hMenu, MF_STRING | MF_POPUP, cast(UINT) hSubMenu, "&Stuff");
+                    }
+                    SetMenu(hwnd, hMenu);
+                }
+
+                wstring iconPath = "../resources_test/menu_icon.ico";
+                {
+                    HICON hIcon = LoadImage(NULL, iconPath.ptr, IMAGE_ICON, 32, 32,
+                    LR_LOADFROMFILE);
+                    if (hIcon)
+                        SendMessage(hwnd, WM_SETICON, ICON_BIG, cast(LPARAM) hIcon);
+                    else
+                        MessageBox(hwnd, "Could not load large icon!", "Error", MB_OK | MB_ICONERROR);
+                }
+                {
+                    HICON hIconSm = LoadImage(NULL, iconPath.ptr, IMAGE_ICON, 16, 16, LR_LOADFROMFILE);
+                    if (hIconSm)
+                        SendMessage(hwnd, WM_SETICON, ICON_SMALL, cast(LPARAM) hIconSm);
+                    else
+                        MessageBox(hwnd, "Could not load small icon!", "Error", MB_OK | MB_ICONERROR);
+                }
+                break;
+            }
+        }
         case WM_LBUTTONDOWN:
         case WM_RBUTTONDOWN:
         case WM_MBUTTONDOWN:

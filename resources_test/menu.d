@@ -1,9 +1,8 @@
-/* Converted to D from resource.h by htod */
-module menu;
-//C     #define IDR_MYMENU 101
-//C     #define IDI_MYICON 201
-const IDR_MYMENU = 101;
-//C     #define ID_FILE_EXIT 9001
-const IDI_MYICON = 201;
-//C     #define ID_STUFF_GO 9002
-const ID_FILE_EXIT = 9001;
+// TODO: learn to use dstep
+
+module resources.menu;
+
+enum IDR_MYMENU     = 101;
+enum IDI_MYICON     = 201;
+enum ID_FILE_EXIT   = 9001;
+enum ID_STUFF_GO    = 9002;

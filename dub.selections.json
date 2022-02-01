@@ -1,6 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
+		"acd-versions": "1.0.3",
 		"win32": "2.98.1",
 		"windows-headers": "1.0.4"
 	}

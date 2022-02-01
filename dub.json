@@ -6,6 +6,9 @@
 	"targetType": "executable",
 	"workingDirectory": "bin",
 	"libs": ["kernel32", "user32", "vfw32"],
+	"dependencies": {
+		"acd-versions": "~>1.0.3"
+	},
 	"configurations": [
 		{
 			"name": "default"
@@ -15,6 +18,18 @@
 			"sourceFiles": [
 				"resources_test/menu.res",
 				"resources_test/menu.d"
+			],
+			"versions": [
+				"UseMenuResource"
+			]
+		},
+		{
+			"name": "resources_test_manual",
+			"sourceFiles": [
+				"resources_test/menu.d"
+			],
+			"versions": [
+				"DoMenuInCode"
 			]
 		}
 	]
