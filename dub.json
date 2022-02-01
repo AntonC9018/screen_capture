@@ -5,5 +5,17 @@
 	"targetPath": "bin",
 	"targetType": "executable",
 	"workingDirectory": "bin",
-	"libs": ["kernel32", "user32", "vfw32"]
+	"libs": ["kernel32", "user32", "vfw32"],
+	"configurations": [
+		{
+			"name": "default"
+		},
+		{
+			"name": "resources_test",
+			"sourceFiles": [
+				"resources_test/menu.res",
+				"resources_test/menu.d"
+			]
+		}
+	]
 }

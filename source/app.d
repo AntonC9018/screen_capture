@@ -25,18 +25,20 @@ extern(Windows) int WinMain(
     {
         WNDCLASSEX wc;
         {
+            import menu;
+
             wc.cbSize = WNDCLASSEX.sizeof;
             wc.style = 0;
             wc.lpfnWndProc = &WndProc;
             wc.cbClsExtra = 0;
             wc.cbWndExtra = 0;
             wc.hInstance = hInstance;
-            wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+            wc.hIcon = LoadIcon(hInstance, cast(wchar*) IDI_MYICON);
             wc.hCursor = LoadCursor(NULL, IDC_ARROW);
             wc.hbrBackground = cast(HBRUSH) (COLOR_WINDOW + 1);
-            wc.lpszMenuName = NULL;
+            wc.lpszMenuName = cast(wchar*) IDR_MYMENU;
             wc.lpszClassName = g_szClassName;
-            wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+            wc.hIconSm = LoadImage(hInstance, cast(wchar*) IDI_MYICON, IMAGE_ICON, 16, 16, 0);
         }
 
         if (!RegisterClassEx(&wc))
@@ -109,7 +111,11 @@ extern(Windows) int WinMain(
     {
         MSG msg;
         uint filterMin = 0; 
-        uint filterMax = 0; 
+        uint filterMax = 0;
+
+        //  0 = false
+        //  1 = true
+        // -1 = error
         while (GetMessage(&msg, null, filterMin, filterMax) > 0)
         {
             TranslateMessage(&msg);
@@ -124,6 +130,17 @@ extern(Windows) LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 {
     switch (msg)
     {
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        {
+            enum maxPathWChar = MAX_PATH / wchar.sizeof;
+            wchar[maxPathWChar] szFileName;
+            HINSTANCE hInstance = GetModuleHandle(null);
+            GetModuleFileName(hInstance, szFileName.ptr, maxPathWChar);
+            MessageBox(hwnd, szFileName.ptr, "The program is: "w.ptr, MB_OK | MB_ICONINFORMATION);
+            break;
+        }
         case WM_CLOSE: 
             DestroyWindow(hwnd);
             break;
