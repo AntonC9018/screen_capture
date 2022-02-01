@@ -6,19 +6,28 @@ import core.sys.windows.windows;
 
 void main()
 {
-    // Ideally this should buffer, but I don't write much UTF-16, so at this point I don't care.
-    static HANDLE hConsole;
-    static void writew(const(wchar)[] buffer)
-    {
-        while (buffer.length > 0)
-        {
-            DWORD written;
-            WriteConsoleW(hConsole, buffer.ptr, cast(DWORD) buffer.length, &written, null);
-            buffer = buffer[written .. $];
-        }
-    }
-    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    
+}
 
+
+// Ideally this should buffer, but I don't write much UTF-16, so at this point I don't care.
+static HANDLE hConsole;
+static void writew(const(wchar)[] buffer)
+{
+    while (buffer.length > 0)
+    {
+        DWORD written;
+        WriteConsoleW(hConsole, buffer.ptr, cast(DWORD) buffer.length, &written, null);
+        buffer = buffer[written .. $];
+    }
+}
+static this()
+{
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+}
+
+static void doWindowStuff()
+{
     {
         HWND[] goodWindows;
 
