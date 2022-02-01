@@ -144,9 +144,9 @@ extern(Windows) LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
     {
         static if (Version.DoMenuInCode)
         {
+            import resources.menu;
             case WM_CREATE:
             {
-                import resources.menu;
                 {
                     HMENU hMenu = CreateMenu();
                     {
@@ -177,6 +177,19 @@ extern(Windows) LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                         SendMessage(hwnd, WM_SETICON, ICON_SMALL, cast(LPARAM) hIconSm);
                     else
                         MessageBox(hwnd, "Could not load small icon!", "Error", MB_OK | MB_ICONERROR);
+                }
+                break;
+            }
+            case WM_COMMAND:
+            {
+                switch (LOWORD(wParam))
+                {
+                    case ID_FILE_EXIT:
+                        break;
+                    case ID_STUFF_GO:
+                        break;
+                    default: 
+                        break;
                 }
                 break;
             }
