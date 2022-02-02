@@ -65,20 +65,6 @@ extern(Windows) int WinMain(
     {
         HWND hwnd = 
         (){
-            // HWND CreateWindowExW(
-            //     [in]           DWORD     dwExStyle,
-            //     [in, optional] LPCWSTR   lpClassName,
-            //     [in, optional] LPCWSTR   lpWindowName,
-            //     [in]           DWORD     dwStyle,
-            //     [in]           int       X,
-            //     [in]           int       Y,
-            //     [in]           int       nWidth,
-            //     [in]           int       nHeight,
-            //     [in, optional] HWND      hWndParent,
-            //     [in, optional] HMENU     hMenu,
-            //     [in, optional] HINSTANCE hInstance,
-            //     [in, optional] LPVOID    lpParam);
-
             DWORD     dwExStyle    = WS_EX_CLIENTEDGE;
             LPCWSTR   lpClassName  = g_szClassName;
             LPCWSTR   lpWindowName = "The title of my window";
@@ -140,13 +126,22 @@ extern(Windows) int WinMain(
 // Step 4: the Window Procedure
 extern(Windows) LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) nothrow
 {
+    static void DoStuff(HWND hwnd)
+    {
+        enum maxPathWChar = MAX_PATH / wchar.sizeof;
+        wchar[maxPathWChar] szFileName;
+        HINSTANCE hInstance = GetModuleHandle(null);
+        GetModuleFileName(hInstance, szFileName.ptr, maxPathWChar);
+        MessageBox(hwnd, szFileName.ptr, "The program is: "w.ptr, MB_OK | MB_ICONINFORMATION);
+    }
+
     switch (msg)
     {
         static if (Version.DoMenuInCode)
         {
-            import resources.menu;
             case WM_CREATE:
             {
+                import resources.menu;
                 {
                     HMENU hMenu = CreateMenu();
                     {
@@ -180,13 +175,19 @@ extern(Windows) LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 }
                 break;
             }
+        }
+        static if (Version.DoMenuInCode || Version.UseMenuResource)
+        {
             case WM_COMMAND:
             {
+                import resources.menu;
                 switch (LOWORD(wParam))
                 {
                     case ID_FILE_EXIT:
+                        PostMessage(hwnd, WM_CLOSE, 0, 0);
                         break;
                     case ID_STUFF_GO:
+                        DoStuff(hwnd);
                         break;
                     default: 
                         break;
@@ -198,12 +199,8 @@ extern(Windows) LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         case WM_RBUTTONDOWN:
         case WM_MBUTTONDOWN:
         {
-            enum maxPathWChar = MAX_PATH / wchar.sizeof;
-            wchar[maxPathWChar] szFileName;
-            HINSTANCE hInstance = GetModuleHandle(null);
-            GetModuleFileName(hInstance, szFileName.ptr, maxPathWChar);
-            MessageBox(hwnd, szFileName.ptr, "The program is: "w.ptr, MB_OK | MB_ICONINFORMATION);
-            break;
+            DoStuff(hwnd);
+            break;           
         }
         case WM_CLOSE: 
             DestroyWindow(hwnd);
