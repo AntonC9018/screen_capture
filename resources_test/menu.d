@@ -7,3 +7,4 @@ enum IDD_ABOUT      = 102;
 enum IDI_MYICON     = 201;
 enum ID_FILE_EXIT   = 9001;
 enum ID_STUFF_GO    = 9002;
+enum ID_HELP_ABOUT  = 9003;

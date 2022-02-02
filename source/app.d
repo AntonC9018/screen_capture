@@ -181,14 +181,81 @@ extern(Windows) LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             case WM_COMMAND:
             {
                 import resources.menu;
-                switch (LOWORD(wParam))
+                auto id = LOWORD(wParam);
+                switch (id)
                 {
+                    case ID_HELP_ABOUT:
+                    {
+                        static extern(Windows) INT_PTR AboutDlgProc(
+                            HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) nothrow
+                        {
+                            // TRUE means we have processed the message;
+                            // FALSE means we don't (like use the default, I guess).
+                            switch (message)
+                            {
+                                case WM_INITDIALOG:
+                                    return TRUE;
+                                case WM_COMMAND:
+                                {
+                                    switch (LOWORD(wParam))
+                                    {
+                                        case IDOK:
+                                        {
+                                            EndDialog(hwnd, IDOK);
+                                            break;
+                                        }
+                                        case IDCANCEL:
+                                        {
+                                            EndDialog(hwnd, IDCANCEL);
+                                            break;
+                                        }
+                                        default:
+                                            return FALSE;
+                                    }
+                                    break;
+                                }
+                                default:
+                                    return FALSE;
+                            }
+                            return TRUE;
+                        }
+
+                        const ret = DialogBox(GetModuleHandle(NULL), cast(wchar*) IDD_ABOUT, hwnd, &AboutDlgProc);
+                        switch (ret)
+                        {
+                            case IDOK:
+                            {
+                                MessageBox(hwnd, "Dialog exited with IDOK.", "Notice",
+                                    MB_OK | MB_ICONINFORMATION);
+                                break;
+                            }
+                            case IDCANCEL:
+                            {
+                                MessageBox(hwnd, "Dialog exited with IDCANCEL.", "Notice",
+                                    MB_OK | MB_ICONINFORMATION);
+                                break;
+                            }
+                            case -1:
+                            {
+                                MessageBox(hwnd, "Dialog failed!", "Error", 
+                                    MB_OK | MB_ICONINFORMATION);
+                                break;
+                            }
+                            default:
+                                break;
+                        }
+                        break;
+                    }
                     case ID_FILE_EXIT:
+                    {
                         PostMessage(hwnd, WM_CLOSE, 0, 0);
                         break;
+                    }
                     case ID_STUFF_GO:
+                    {
                         DoStuff(hwnd);
                         break;
+                    }
                     default: 
                         break;
                 }

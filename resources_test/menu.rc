@@ -13,6 +13,12 @@ BEGIN
         MENUITEM "&Go", ID_STUFF_GO
         MENUITEM "G&o somewhere else", 0, GRAYED
     END
+
+    
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "A&bout", ID_HELP_ABOUT
+    END
 END
 
 IDD_ABOUT DIALOG DISCARDABLE 0, 0, 239, 66
